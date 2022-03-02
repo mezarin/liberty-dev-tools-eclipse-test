@@ -39,7 +39,7 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + projName);
             return;
         }
         String cmd = "";
@@ -55,7 +55,7 @@ public class DevModeOperations {
                 System.out.println("Build file on project" + projName + " is not valid.");
             }
 
-            cmd += "gradle libertyDev -b=" + projectPath;
+            cmd += "gradle libertyDev -p=" + projectPath;
             cmd = Paths.get(getGradleInstallHome(), "bin", cmd).toString();
         } else {
             Dialog.displayErrorMessage("Project" + projName + "is not a Gradle or Maven project.");
@@ -82,7 +82,7 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + projName);
             return;
         }
         String cmd = "";
@@ -90,7 +90,7 @@ public class DevModeOperations {
             cmd += "mvn io.openliberty.tools:liberty-maven-plugin:dev " + userParms + " -f " + projectPath;
             cmd = Paths.get(getMavenInstallHome(), "bin", cmd).toString();
         } else if (Project.isGradle(project)) {
-            cmd += "gradle libertyDev " + userParms + " -b=" + projectPath;
+            cmd += "gradle libertyDev " + userParms + " -p=" + projectPath;
             cmd = Paths.get(getGradleInstallHome(), "bin", cmd).toString();
         } else {
             Dialog.displayErrorMessage("Project" + projName + "is not a Gradle or Maven project.");
@@ -115,7 +115,7 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + projName);
             return;
         }
 
@@ -124,7 +124,7 @@ public class DevModeOperations {
             cmd += "mvn io.openliberty.tools:liberty-maven-plugin:devc -f " + projectPath;
             cmd = Paths.get(getMavenInstallHome(), "bin", cmd).toString();
         } else if (Project.isGradle(project)) {
-            cmd += "gradle libertyDevc -b=" + projectPath;
+            cmd += "gradle libertyDevc -p=" + projectPath;
             cmd = Paths.get(getGradleInstallHome(), "bin", cmd).toString();
         } else {
             Dialog.displayErrorMessage("Project" + projName + "is not a Gradle or Maven project.");
@@ -177,13 +177,17 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + projName);
             return;
         }
 
         String browserId = "maven.failsafe.integration.test.results";
         String name = "Maven Failsafe integration test results";
         Path path = Paths.get(projectPath, "target", "site", "failsafe-report.html");
+        if (!path.toFile().exists()) {
+            Dialog.displayWarningMessage("Integration test results are not available. Be sure to run the tests first.");
+            return;
+        }
 
         try {
             openTestReport(project.getName(), path, browserId, name, name);
@@ -201,13 +205,17 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + projName);
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + projName);
             return;
         }
 
         String browserId = "maven.project.surefire.unit.test.results";
         String name = "Maven Surefire unit test results";
         Path path = Paths.get(projectPath, "target", "site", "surefire-report.html");
+        if (!path.toFile().exists()) {
+            Dialog.displayWarningMessage("Unit test results are not available. Be sure to run the tests first.");
+            return;
+        }
 
         try {
             openTestReport(project.getName(), path, browserId, name, name);
@@ -225,15 +233,20 @@ public class DevModeOperations {
         String projName = project.getName();
         String projectPath = Project.getPath(project);
         if (projectPath == null) {
-            Dialog.displayErrorMessage("Unable to find the home path to selected project: " + project.getName());
+            Dialog.displayErrorMessage("Unable to find the home path to the selected project: " + project.getName());
             return;
         }
 
         String browserId = "gradle.project.test.results";
         String name = "Gradle project test results";
+        Path path = getGradleTestReportPath(project, projectPath);
+        if (!path.toFile().exists()) {
+            Dialog.displayWarningMessage("Test results are not available. Be sure to run the tests first.");
+            return;
+        }
 
         try {
-            openTestReport(projName, getGradleTestReportPath(project, projectPath), browserId, name, name);
+            openTestReport(projName, path, browserId, name, name);
         } catch (Exception e) {
             Dialog.displayErrorMessageWithDetails("An error was detected while opening test report for project " + projName, e);
             return;
@@ -243,11 +256,11 @@ public class DevModeOperations {
     /**
      * Opens the specified report in a browser.
      *
-     * @param projName The application project name.
-     * @param path The path to the HTML report file. 
+     * @param projName  The application project name.
+     * @param path      The path to the HTML report file.
      * @param browserId The Id to use for the browser display.
-     * @param name The name to use for the browser display.
-     * @param toolTip The tool tip to use for the browser display.
+     * @param name      The name to use for the browser display.
+     * @param toolTip   The tool tip to use for the browser display.
      * 
      * @throws Exception If an error occurs while displaying the test report.
      */
@@ -274,6 +287,7 @@ public class DevModeOperations {
      */
     public void runCommand(String cmd) throws Exception {
         ITerminalService.Done done = new ITerminalService.Done() {
+            @Override
             public void done(IStatus done) {
             }
         };
@@ -287,6 +301,7 @@ public class DevModeOperations {
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_PATH, cmd);
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_ENVIRONMENT, envs.toArray(new String[envs.size()]));
         properties.put(ITerminalsConnectorConstants.PROP_PROCESS_MERGE_ENVIRONMENT, true);
+
         ITerminalService ts = TerminalServiceFactory.getService();
         ts.openConsole(properties, done);
     }
@@ -331,7 +346,7 @@ public class DevModeOperations {
             }
         }
 
-        return mvnInstall;
+        return "/Users/mezarin/tools/maven/apache-maven-3.8.4";
     }
 
     /**
@@ -345,7 +360,7 @@ public class DevModeOperations {
         // 2. Check for associated environment property.
         String mvnInstall = System.getenv("GRADLE_HOME");
 
-        return mvnInstall;
+        return "/Users/mezarin/tools/gradle/gradle-6.9.2";
     }
 
     /**
@@ -353,7 +368,7 @@ public class DevModeOperations {
      * 
      * @return The HTML default located in the configured in the build file or the default location.
      */
-    private Path getGradleTestReportPath(IProject project, String projectPath) throws Exception {
+    private Path getGradleTestReportPath(IProject project, String projectPath) {
         // TODO: Look for custom dir entry in build.gradle:
         // "test.reports.html.destination". Need to handle a value like this:
         // reports.html.destination = file("$buildDir/edsTestReports/teststuff")
