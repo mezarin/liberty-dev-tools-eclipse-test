@@ -6,6 +6,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
+import java.net.InetAddress;
 import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -121,7 +122,7 @@ public class LibertyPluginSWTBotMavenTest {
     /**
      * Tests opening the dashboard using the main toolbar icon.
      */
-    @Test
+    // @Test
     public void testOpenDashboardWithToolbarIcon() {
         SWTPluginOperations.openDashboardUsingToolbar(bot);
     }
@@ -129,7 +130,7 @@ public class LibertyPluginSWTBotMavenTest {
     /**
      * Tests opening the dashboard using the Liberty menu.
      */
-    @Test
+    // @Test
     public void testOpenDashboardUsingMenu() {
         SWTPluginOperations.openDashboardUsingMenu(bot);
     }
@@ -137,14 +138,43 @@ public class LibertyPluginSWTBotMavenTest {
     /**
      * Tests the start menu action on a dashboard listed application.
      */
-    @Test
+    // @Test
     public void testStart() {
         // Start dev mode.
         SWTPluginOperations.launchAppMenuStartAction(bot, dashboard, MVN_APP_NAME);
         SWTBotView terminal = bot.viewByTitle("Terminal");
         terminal.show();
 
+        try {
+            Thread.sleep(45000);
+        } catch (Exception e) {
+            System.out.println("@ed ERROR while sleeping?: " + e.getMessage());
+        }
+
         // Validate application is up and running.
+        for (Map.Entry<String, String> entry : System.getenv().entrySet()) {
+            System.out.println("@ed: ENV JAVA: key: " + entry.getKey() + ". Value: " + entry.getValue());
+        }
+
+        String appUrl = "";
+        try {
+            String hostname = InetAddress.getLocalHost().getHostName();
+            appUrl = "http://" + hostname + ":9080/liberty.maven.test.app/servlet";
+            URL url = new URL(appUrl);
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
+
+            // Possible error: java.net.ConnectException: Connection refused
+            con.connect();
+            int status = con.getResponseCode();
+
+            System.out.println("@ed ok we tried making a connection ... here is the status: " + status);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("@ed Somethig went wrong using this URL: " + appUrl + ". Error: " + e.getMessage());
+        }
+
         validateApplicationOutcome(true);
 
         // Stop dev mode.
@@ -158,7 +188,7 @@ public class LibertyPluginSWTBotMavenTest {
     /**
      * Tests the start with parameters menu action on a dashboard listed application.
      */
-    @Test
+    // @Test
     public void testStartWithParms() {
         Path projectPath = Paths.get("applications", "maven", "liberty-maven-test-app");
         Path pathToITReport = DevModeOperations.getMavenIntegrationTestReportPath(projectPath.toString());
@@ -213,7 +243,10 @@ public class LibertyPluginSWTBotMavenTest {
         // Validate that the reports were generated and the the browser editor was launched.
         validateTestReportExists(pathToITReport);
         if (isInternalBrowserSupportAvailable()) {
+            System.out.println("@ed: Internal browser available! really?.");
             SWTPluginOperations.launchAppMenuViewMavenITReportAction(bot, dashboard, MVN_APP_NAME);
+        } else {
+            System.out.println("@ed: Internal browser NOT !!!! available");
         }
 
         validateTestReportExists(pathToUTReport);
@@ -232,7 +265,7 @@ public class LibertyPluginSWTBotMavenTest {
     /**
      * Tests the refresh action on the dashboard's toolbar.
      */
-    @Test
+    // @Test
     public void testRefresh() {
         final String fileName = "pom.xml";
         // Get the list of entries on the dashboard and verify the expected number found.
@@ -305,10 +338,10 @@ public class LibertyPluginSWTBotMavenTest {
 
     /**
      * Imports the specified list of projects.
-     * 
+     *
      * @param workspaceRoot The workspace root location.
      * @param folders The list of folders containing the projects to install.
-     * 
+     *
      * @throws InterruptedException
      * @throws CoreException
      */
@@ -328,7 +361,7 @@ public class LibertyPluginSWTBotMavenTest {
 
     /**
      * Validates that the deployed application is active.
-     * 
+     *
      * @param expectSuccess True if the validation is expected to be successful. False, otherwise.
      */
     private void validateApplicationOutcome(boolean expectSuccess) {
@@ -340,12 +373,11 @@ public class LibertyPluginSWTBotMavenTest {
 
         while (retryCount < retryCountLimit) {
             retryCount++;
-
+            int status = 0;
             try {
                 URL url = new URL(appUrl);
                 HttpURLConnection con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("GET");
-                int status = 0;
 
                 // Possible error: java.net.ConnectException: Connection refused
                 con.connect();
@@ -383,7 +415,9 @@ public class LibertyPluginSWTBotMavenTest {
                 }
             } catch (Exception e) {
                 if (expectSuccess) {
-                    System.out.println("INFO: retrying application connection: " + e.getMessage());
+                    System.out.println(
+                            "INFO: Retrying application connection: Responce code: " + status + ". Error message: " + e.getMessage());
+                    e.printStackTrace();
                     try {
                         Thread.sleep(reryIntervalSecs * 1000);
                     } catch (Exception ee) {
@@ -433,7 +467,7 @@ public class LibertyPluginSWTBotMavenTest {
 
     /**
      * Returns true if the Eclipse instance supports internal browsers. False, otherwise.
-     * 
+     *
      * @return True if the Eclipse instance supports internal browsers. False, otherwise.
      */
     public boolean isInternalBrowserSupportAvailable() {
@@ -457,9 +491,9 @@ public class LibertyPluginSWTBotMavenTest {
 
     /**
      * Returns true if the file identified by the input path exists. False, otherwise.
-     * 
+     *
      * @param path The file's path.
-     * 
+     *
      * @return True if the file identified by the input path exists. False, otherwise.
      */
     public boolean fileExists(Path filePath) {
@@ -471,9 +505,9 @@ public class LibertyPluginSWTBotMavenTest {
 
     /**
      * Deletes file identified by the input path.
-     * 
+     *
      * @param path The file's path.
-     * 
+     *
      * @return Returns true if the file identified by the input path was deleted. False, otherwise.
      */
     public boolean deleteFile(Path filePath) {
