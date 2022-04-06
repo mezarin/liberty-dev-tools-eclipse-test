@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -Eeox pipefail
+set -x
 
 MAVEN_VERSION=3.8.5
 MAVEN_SHA=89ab8ece99292476447ef6a6800d9842bbb60787b9b8a45c103aa61d2f205a971d8c3ddfb8b03e514455b4173602bd015e82958c0b3ddc1728a57126f773c743
@@ -29,8 +29,8 @@ installJDK() {
 	local url="https://github.com/ibmruntimes/semeru11-binaries/releases/download/jdk-${SEMERU_JDK_VERSION}%2B${SEMERU_JDK_FIXPACK}_openj9-${OPENJ9_VERSION}/ibm-semeru-open-jdk_x64_linux_${SEMERU_JDK_VERSION}_${SEMERU_JDK_FIXPACK}_openj9-${OPENJ9_VERSION}.tar.gz"
 	curl -fsSL -o tools/jdk/semeru-jdk11.tar.gz "$url"
 	tar -xzf tools/jdk/semeru-jdk11.tar.gz -C tools/jdk
-	export JAVA_HOME="/tools/jdk/jdk-${SEMERU_JDK_VERSION}+${SEMERU_JDK_FIXPACK}"
-	PATH="${JAVA_HOME}/bin:${PATH}"
+	echo "JAVA_HOME=/tools/jdk/jdk-${SEMERU_JDK_VERSION}+${SEMERU_JDK_FIXPACK}" >> $GITHUB_ENV
+	echo "${JAVA_HOME}/bin" >> $GITHUB_PATH
 }
 
 installMaven() {
@@ -38,8 +38,8 @@ installMaven() {
 	local url="https://dlcdn.apache.org/maven/maven-3/${MAVEN_VERSION}/binaries/apache-maven-${MAVEN_VERSION}-bin.tar.gz"
 	curl -fsSL -o tools/maven/apache-maven.tar.gz "$url"
     tar -xzf tools/maven/apache-maven.tar.gz -C tools/maven --strip-components=1
-    export MAVEN_HOME="tools/maven/apache-maven-${MAVEN_VERSION}"
-    PATH="${MAVEN_HOME}:${PATH}"
+    echo "MAVEN_HOME=tools/maven/apache-maven-${MAVEN_VERSION}" >> $GITHUB_ENV
+    echo "${MAVEN_HOME}/bin" >> $GITHUB_PATH
 }
 
 installDocker() {
