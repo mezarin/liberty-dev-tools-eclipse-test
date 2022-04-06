@@ -11,54 +11,10 @@ jobs:
       - name: 'Setup: Checkout plugin'
         uses: actions/checkout@v2
 
-      # Install JDK 11.
-      - name: 'Setup: Install JDK' 
-        uses: actions/setup-java@v2
-        with:
-          distribution: 'adopt-openj9'
-          java-version: '11'
-      - name: 'Setup: Install maven'
-        run: |
-          MAVEN_VERSION=3.8.4
-          BASE_URL=https://archive.apache.org/dist/maven/maven-3/${MAVEN_VERSION}/binaries/
-          SHA=a9b2d825eacf2e771ed5d6b0e01398589ac1bfa4171f36154d1b5787879605507802f699da6f7cfc80732a5282fd31b28e4cd6052338cbef0fa1358b48a5e3c8
-          curl -fsSL -o /tmp/apache-maven.tar.gz ${BASE_URL}/apache-maven-${MAVEN_VERSION}-bin.tar.gz
-          mkdir -p /tmp/maven
-          tar -xzf /tmp/apache-maven.tar.gz -C /tmp/maven --strip-components=1
-          rm -f /tmp/apache-maven.tar.gz
-          
-          export MAVEN_HOME=/tmp/maven/apache-maven-${MAVEN_VERSION}
-          PATH=$MAVEN_HOME/bin:$PATH
-          echo $MAVEN_HOME
-          echo $PATH
-          env
-      # Install xvfb display server and metacity window manager.
-      - name: 'Setup: Install required software'
-        run: |
-          sudo apt-get update
-          sudo apt-get install dbus-x11 at-spi2-core xvfb metacity libwebkit2gtk-4.0-dev
-          sudo apt-get install libqt4-webkit libqt5webkit5 libqtscript4-webkit libqtwebkit4 libswt-webkit-gtk-3-jni libwebkitgtk-1.0-0 libwebkitgtk-3.0-0
-
+      # Install Software.
+      - name: 'Setup: Install required software' 
+        run: ./tests/resources/ci/scripts/setup.sh
+        
       # Build the plugin.
       - name: 'Build: Build-Package-RunTests'
-        run: |
-          echo "@ed: localhost: ";hostname
-          env
-          export MAVEN_HOME=/tmp/maven/apache-maven-3.8.4
-          PATH=$MAVEN_HOME/bin:$PATH
-          env
-          export $(dbus-launch)
-          export DISPLAY=:99.0
-          Xvfb -ac :99 -screen 0 1280x1024x16 > /dev/null 2>&1 &
-          metacity --sm-disable --replace 2> metacity.err &
-          mvn clean install
-      - name: 'gather test data'
-        if: always()
-        run: |
-          pwd; 
-          which java
-          which mvn
-          which gradle
-          ls -la tests/applications/maven/liberty-maven-test-app/target;
-          ls -la tests/applications/maven/liberty-maven-test-app/target/liberty/wlp/usr;
-          cat tests/applications/maven/liberty-maven-test-app/target/liberty/wlp/usr/servers/defaultServer/logs/messages.log
+        run: ./tests/resources/ci/scripts/exec.sh
