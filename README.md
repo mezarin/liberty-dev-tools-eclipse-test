@@ -24,7 +24,7 @@ For more detailed instructions on making use of the Open Liberty Tools dashboard
 
 ## Features
 
-- View supported `liberty-maven-plugin`(version `3.1` or higher) or `liberty-gradle-plugin`(version `3.0` or higher)
+- View supported `liberty-maven-plugin`(version `3.6.1` or higher) or `liberty-gradle-plugin`(version `3.4.1` or higher)
   projects in the workspace.
 - Start/Stop dev mode.
 - Start dev mode with custom parameters.
@@ -38,7 +38,7 @@ For more detailed instructions on making use of the Open Liberty Tools dashboard
 | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Start                                | Starts dev mode.                                                                                                                                                                                                                                                                                                             |
 | Start…                               | Starts dev mode with custom parameters. Supported parameters can be found in the documentation for the [dev goal of the Liberty Maven Plugin](https://github.com/OpenLiberty/ci.maven/blob/master/docs/dev.md#additional-parameters) and the [libertyDev task of the Liberty Gradle Plugin](https://github.com/OpenLiberty/ci.gradle/blob/master/docs/libertyDev.md#command-line-parameters). |
-| Start in container                   | Starts dev mode with the server in a container. The `liberty-maven-plugin` must be version `3.3-M1` or higher. The `liberty-gradle-plugin` must be version `3.1-M1` or higher.
+| Start in container                   | Starts dev mode with the server in a container.
 | Stop                                 | Stops dev mode.                                                                                                                                                                                                                                                                                                              |
 | Run tests                            | Runs the unit tests and integration tests that are configured for your project. This command requires dev mode to be already started.                                                                                                                                                                                        |
 | View integration test report (Maven) | Opens the integration test report file if it exists at `/target/site/failsafe-report.html`. This action command is only available to Maven projects.                                                                                                                                                                                                                                                                                  |
